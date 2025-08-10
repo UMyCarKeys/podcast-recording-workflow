@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Recording Workflow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 219, 98, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease-out;
+        }
+        
+        .header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #a8a8a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: -2px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        
+        .quick-ref {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+        
+        .quick-ref h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3em;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 18px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .info-item strong {
+            display: block;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+        
+        .info-item span {
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+        
+        .workflow-section {
+            margin: 60px 0;
+        }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5em;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 50px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .flow-container {
+            display: flex;
+            gap: 30px;
+            overflow-x: auto;
+            padding: 20px 0 40px 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+        
+        .flow-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .flow-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .flow-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        .flow-stage {
+            flex: 0 0 320px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.4s ease;
+            animation: slideUp 0.6s ease-out both;
+        }
+        
+        .flow-stage:nth-child(1) { animation-delay: 0.1s; }
+        .flow-stage:nth-child(2) { animation-delay: 0.2s; }
+        .flow-stage:nth-child(3) { animation-delay: 0.3s; }
+        .flow-stage:nth-child(4) { animation-delay: 0.4s; }
+        
+        .flow-stage:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .flow-stage::after {
+            content: '';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%);
+        }
+        
+        .flow-stage:last-child::after {
+            display: none;
+        }
+        
+        .stage-number {
+            position: absolute;
+            top: -15px;
+            left: 30px;
+            background: linear-gradient(135deg, #7877c6 0%, #ff77c6 100%);
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            box-shadow: 0 5px 15px rgba(120, 119, 198, 0.3);
+        }
+        
+        .stage-header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stage-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        
+        .stage-time {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 300;
+        }
+        
+        .checklist {
+            margin-top: 20px;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        
+        .checklist-item:hover {
+            padding-left: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+        
+        .checkbox-wrapper {
+            position: relative;
+            margin-right: 15px;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        
+        .checkmark {
+            position: relative;
+            height: 22px;
+            width: 22px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .checklist-item input[type="checkbox"]:checked ~ .checkmark {
+            background: linear-gradient(135deg, #7877c6 0%, #ff77c6 100%);
+            border-color: transparent;
+        }
+        
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 11px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .checklist-item input[type="checkbox"]:checked ~ .checkmark:after {
+            display: block;
+        }
+        
+        .checklist-item label {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95em;
+            font-weight: 400;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+        
+        .checklist-item input[type="checkbox"]:checked ~ label {
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: line-through;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 35px;
+            transition: all 0.4s ease;
+            animation: fadeIn 1s ease-out both;
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #7877c6 0%, #ff77c6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(120, 119, 198, 0.3);
+        }
+        
+        .template-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .template-box:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .ritual-timeline {
+            margin: 30px 0;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            opacity: 0;
+            animation: slideInLeft 0.6s ease-out forwards;
+        }
+        
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+        .timeline-item:nth-child(6) { animation-delay: 0.6s; }
+        
+        .timeline-badge {
+            background: linear-gradient(135deg, #7877c6 0%, #ff77c6 100%);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            min-width: 140px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9em;
+            box-shadow: 0 5px 15px rgba(120, 119, 198, 0.2);
+        }
+        
+        .timeline-content {
+            margin-left: 30px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            flex: 1;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .timeline-content:hover {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateX(5px);
+        }
+        
+        .tips-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .tip-card {
+            background: linear-gradient(135deg, rgba(120, 119, 198, 0.1) 0%, rgba(255, 119, 198, 0.1) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .tip-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(120, 119, 198, 0.15) 0%, rgba(255, 119, 198, 0.15) 100%);
+        }
+        
+        .tip-card h4 {
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .tip-card ul {
+            list-style: none;
+        }
+        
+        .tip-card li {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 0;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tip-card li:before {
+            content: "→";
+            color: #ff77c6;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .troubleshoot-card {
+            background: rgba(255, 100, 100, 0.05);
+            border: 1px solid rgba(255, 100, 100, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .troubleshoot-card:hover {
+            background: rgba(255, 100, 100, 0.08);
+            transform: translateX(5px);
+        }
+        
+        .troubleshoot-card strong {
+            color: #ff6b6b;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+        
+        .troubleshoot-card p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+        
+        .footer-message {
+            text-align: center;
+            padding: 60px 20px;
+            margin-top: 80px;
+            background: linear-gradient(135deg, rgba(120, 119, 198, 0.1) 0%, rgba(255, 119, 198, 0.1) 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+        
+        .footer-message h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2em;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff 0%, #a8a8a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        
+        .footer-message p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1em;
+            font-weight: 300;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeInDown {
+            from { 
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .flow-container {
+                flex-direction: column;
+            }
+            
+            .flow-stage {
+                flex: 1 1 auto;
+            }
+            
+            .flow-stage::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Podcast Workflow</h1>
+            <p>STREAMLINED RECORDING PROCESS</p>
+        </div>
+        
+        <div class="quick-ref">
+            <h2>QUICK REFERENCE</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Format</strong>
+                    <span>WAV • 44.1kHz • 16-bit</span>
+                </div>
+                <div class="info-item">
+                    <strong>Hardware</strong>
+                    <span>DJI Lavalier • Mac • Audacity</span>
+                </div>
+                <div class="info-item">
+                    <strong>Naming</strong>
+                    <span>EP##_Title_RAW_Date</span>
+                </div>
+                <div class="info-item">
+                    <strong>Delivery</strong>
+                    <span>Folder with WAV + Notes</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="workflow-section">
+            <h2 class="section-title">Recording Pipeline</h2>
+            <div class="flow-container">
+                <div class="flow-stage">
+                    <div class="stage-number">1</div>
+                    <div class="stage-header">
+                        <div class="stage-title">Pre-Production</div>
+                        <div class="stage-time">Day before + 30 min setup</div>
+                    </div>
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre1">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre1">Room selected & prepared</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre2">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre2">Environment silenced</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre3">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre3">Mac restarted fresh</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre4">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre4">DJI mic connected</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre5">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre5">Audacity: 44.1kHz set</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre6">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre6">Test recording verified</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="pre7">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="pre7">Content outline ready</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flow-stage">
+                    <div class="stage-number">2</div>
+                    <div class="stage-header">
+                        <div class="stage-title">Production</div>
+                        <div class="stage-time">Active recording</div>
+                    </div>
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec1">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec1">Slate recorded (EP#, date)</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec2">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec2">Sync clap captured</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec3">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec3">Levels: -12 to -6dB</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec4">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec4">Timestamps noted</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec5">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec5">"Pickup" for retakes</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec6">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec6">Mic distance consistent</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="rec7">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="rec7">30s room tone captured</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flow-stage">
+                    <div class="stage-number">3</div>
+                    <div class="stage-header">
+                        <div class="stage-title">Post-Production</div>
+                        <div class="stage-time">Immediately after</div>
+                    </div>
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="post1">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="post1">Project saved</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="post2">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="post2">WAV exported (16-bit PCM)</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="post3">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="post3">File named correctly</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="post4">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="post4">Session notes created</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="post5">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="post5">Edit points marked</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="post6">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="post6">Best moments flagged</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flow-stage">
+                    <div class="stage-number">4</div>
+                    <div class="stage-header">
+                        <div class="stage-title">Delivery</div>
+                        <div class="stage-time">Final handoff</div>
+                    </div>
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="del1">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="del1">Audio verified</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="del2">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="del2">Episode folder created</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="del3">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="del3">All files included</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="del4">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="del4">Upload complete</label>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="del5">
+                                <span class="checkmark"></span>
+                            </div>
+                            <label for="del5">Confirmation sent</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cards-grid">
+            <div class="glass-card">
+                <h3><span class="card-icon">📝</span> Session Notes</h3>
+                <div class="template-box">EPISODE: [Number] - [Title]
+DATE: [Date] • DURATION: [Length]
+
+TECHNICAL NOTES
+• Audio issues: [timestamps]
+• Background noise: [moments]
+• Technical interruptions: [any]
+
+EDITING REQUESTS
+• Remove: [time] - [description]
+• Keep: [time] - [great moment]
+• Enhance: [time] - [emphasis]
+
+CREATIVE DIRECTION
+• Vibe/Energy: [description]
+• Music style: [reference]
+• Special effects: [needs]
+
+TARGET DATE
+• Publication: [when needed]</div>
+            </div>
+            
+            <div class="glass-card">
+                <h3><span class="card-icon">✉️</span> Delivery Email</h3>
+                <div class="template-box">Subject: Episode ## Ready for Post
+
+Episode ## uploaded successfully.
+
+FOLDER CONTENTS
+✓ RAW audio file (.wav)
+✓ Session notes document
+✓ Reference materials
+
+KEY PRIORITIES
+• [Most important edit]
+• [Turnaround needed by]
+• [Special considerations]
+
+Let me know if you need anything else!</div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h3><span class="card-icon">⏰</span> Recording Ritual</h3>
+            <div class="ritual-timeline">
+                <div class="timeline-item">
+                    <div class="timeline-badge">2 hours</div>
+                    <div class="timeline-content">Light meal, hydrate, avoid dairy</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-badge">1 hour</div>
+                    <div class="timeline-content">Vocal warmups, review outline & talking points</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-badge">30 minutes</div>
+                    <div class="timeline-content">Technical setup, room preparation</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-badge">10 minutes</div>
+                    <div class="timeline-content">Bio break, phone on airplane mode</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-badge">5 minutes</div>
+                    <div class="timeline-content">Center yourself, breathing exercises</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-badge">RECORD</div>
+                    <div class="timeline-content">You're ready. Trust the process. 🎙️</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h3><span class="card-icon">💎</span> Pro Tips</h3>
+            <div class="tips-container">
+                <div class="tip-card">
+                    <h4>Performance</h4>
+                    <ul>
+                        <li>Stand for energy</li>
+                        <li>Smile while speaking</li>
+                        <li>Visualize one listener</li>
+                        <li>Keep water handy</li>
+                    </ul>
+                </div>
+                <div class="tip-card">
+                    <h4>Efficiency</h4>
+                    <ul>
+                        <li>Batch record episodes</li>
+                        <li>Template segments</li>
+                        <li>Capture room tone</li>
+                        <li>Document everything</li>
+                    </ul>
+                </div>
+                <div class="tip-card">
+                    <h4>Communication</h4>
+                    <ul>
+                        <li>Timestamps are gold</li>
+                        <li>Over-communicate vision</li>
+                        <li>Share references</li>
+                        <li>Flag priorities clearly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h3><span class="card-icon">🚨</span> Quick Fixes</h3>
+            <div class="troubleshoot-card">
+                <strong>Audacity Crashed</strong>
+                <p>Stay calm. Reopen Audacity for auto-recovery. Check: ~/Library/Application Support/audacity/AutoSave</p>
+            </div>
+            <div class="troubleshoot-card">
+                <strong>Audio Quality Issues</strong>
+                <p>Reconnect mic • Adjust gain to -12dB • Check room acoustics • Add pop filter if needed</p>
+            </div>
+            <div class="troubleshoot-card">
+                <strong>Forgot to Record</strong>
+                <p>Note your content immediately • Re-record while fresh • Mark as "Take 2" • Learn and move forward</p>
+            </div>
+        </div>
+        
+        <div class="footer-message">
+            <h3>Excellence in Every Episode</h3>
+            <p>Clean audio + clear communication = podcast magic. Trust the process.</p>
+        </div>
+    </div>
+</body>
+</html>
